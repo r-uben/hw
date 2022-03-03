@@ -1,0 +1,17 @@
+\begin{table}
+\caption{}
+\label{}
+\begin{center}
+\begin{tabular}{lllll}
+\hline
+               & LL38   & LLStrong38 & LL49   & LLStrong49  \\
+\hline
+const          & 3.55*  & 5.41*      & 4.61*  & 5.69*       \\
+               & (1.90) & (3.22)     & (2.45) & (2.90)      \\
+R-squared      & 0.05   & 0.04       & 0.04   & 0.04        \\
+R-squared Adj. & 0.04   & 0.04       & 0.04   & 0.03        \\
+\hline
+\end{tabular}
+\end{center}
+\end{table}
+
