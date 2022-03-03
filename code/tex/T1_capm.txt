@@ -1,0 +1,18 @@
+\begin{table}
+\caption{}
+\begin{center}
+\begin{tabular}{lccccc}
+\hline
+          &   Lead   &   Mid    &   Lag    &    LL   & LLStrong  \\
+\midrule
+const     & 3.17***  & -0.63    & -1.79    & 4.96*** & 6.12***   \\
+          & (1.05)   & (0.47)   & (1.29)   & (1.89)  & (1.94)    \\
+mktrf     & 11.17*** & 12.01*** & 12.77*** & -1.60*  & -1.84*    \\
+          & (0.47)   & (0.18)   & (0.59)   & (0.94)  & (0.96)    \\
+R-squared & 0.82     & 0.96     & 0.81     & 0.03    & 0.03      \\
+          & 0.82     & 0.96     & 0.81     & 0.03    & 0.03      \\
+\hline
+\end{tabular}
+\end{center}
+\end{table}
+

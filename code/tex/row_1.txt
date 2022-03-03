@@ -1,0 +1,17 @@
+\begin{table}
+\caption{}
+\label{}
+\begin{center}
+\begin{tabular}{llllll}
+\hline
+               & Lead    & Mid    & Lag    & LL     & LLStrong  \\
+\hline
+constant       & 9.43*** & 6.03** & 5.24*  & 4.20** & 5.24***   \\
+               & (2.27)  & (2.76) & (3.04) & (1.79) & (1.96)    \\
+R-squared      & 0.00    & 0.00   & 0.00   & 0.00   & 0.00      \\
+R-squared Adj. & 0.00    & 0.00   & 0.00   & 0.00   & 0.00      \\
+\hline
+\end{tabular}
+\end{center}
+\end{table}
+
