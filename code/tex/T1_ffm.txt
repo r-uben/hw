@@ -1,12 +1,15 @@
 \begin{table}
 \caption{}
+\label{}
 \begin{center}
-\begin{tabular}{lccccc}
+\begin{tabular}{llllll}
 \hline
-      &   Lead  &  Mid   &  Lag   &   LL   & LLStrong  \\
-\midrule
-const & 3.02*** & -0.71  & -1.66  & 4.68** & 6.23**    \\
-      & (1.15)  & (0.54) & (1.43) & (2.07) & (2.48)    \\
+               & Lead    & Mid    & Lag    & LL     & LLStrong  \\
+\hline
+const          & 3.02*** & -0.71  & -1.66  & 4.68** & 6.23**    \\
+               & (1.15)  & (0.54) & (1.43) & (2.07) & (2.48)    \\
+R-squared      & 0.82    & 0.96   & 0.81   & 0.04   & 0.04      \\
+R-squared Adj. & 0.82    & 0.96   & 0.81   & 0.03   & 0.03      \\
 \hline
 \end{tabular}
 \end{center}

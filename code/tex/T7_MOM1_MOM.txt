@@ -1,0 +1,19 @@
+\begin{table}
+\caption{}
+\label{}
+\begin{center}
+\begin{tabular}{ll}
+\hline
+               & LLStrong30  \\
+\hline
+const          & 4.20**      \\
+               & (2.07)      \\
+mom            & 0.12        \\
+               & (0.09)      \\
+R-squared      & 0.02        \\
+R-squared Adj. & 0.02        \\
+\hline
+\end{tabular}
+\end{center}
+\end{table}
+

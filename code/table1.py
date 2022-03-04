@@ -1,17 +1,18 @@
 import pandas as pd
 import statsmodels.api as sm
 from statsmodels.iolib.summary2 import summary_col
-from pathlib import Path
+from aux_class import AuxClass
 
 class Table1(object):
 
-    def __init__(self, master_file, rf_file):
+    def __init__(self, master_file, rf_file, lags):
+        self.aux = AuxClass(master_file, rf_file)
 
         self.df     = pd.read_excel(master_file, sheet_name="T1_ptfs", names=["dt", "LeadR", "MidR", "LagR", "Lead", "Mid", "Lag", "LL", "LLStrong", "mktrf", "smb", "hml"], dtype=str)
         self.df_rf  = pd.read_csv(rf_file, sep=";", names=["dtt", "v2", "v3", "v4", "rf"], dtype=str)
         #
         self.ann    = 12
-        self.lags   = 24
+        self.lags   = lags
         # Factors
         self.F      = self.df.keys().tolist()
         self.K      = len(self.F)
@@ -20,40 +21,13 @@ class Table1(object):
         self.df2    = self.df_rf.copy()
         self.T      = len(self.df)
         
-    def _take_factors(self):
-        self.F = self.df.keys().tolist()
-        self.K = len(self.F)
-
-    def _factors_order(self):
-        flags   = [k for k in range(self.K)]
-        for flag in flags:
-            self.zip_f[self.F[flag]] = flag
-        self.zip_f
-
     def _df_include_constant_columns(self):
         self.df["const"] = [1]*self.T
         cols    = self.df.columns.tolist()
         cols    = [cols[0]] + ["const"] + cols[1:-1]
         self.df = self.df[cols]
-
-    def fix_date(self, date):
-        year    = [date[i] for i in range(4)]
-        month   = [date[i] for i in range(4,6)]
-        day     = [date[i] for i in range(6,8)]
-        year    = ''.join(year)
-        month   = ''.join(month)
-        day     = ''.join(day)
-        date = [day, month, year]
-        date = '/'.join(date)
-        return date
-
-    def _df_fix_date(self):
-        date_col = self.df['dt']
-        for i in range(self.T):
-            date_col[i] = self.fix_date(str(date_col[i]))
-        self.df['dt'] = date_col
         
-    def _remove_already_annualised(self, cols):
+    def _df_remove_already_annualised(self, cols):
         if "dt" in cols:
             cols.remove("dt")
         if "mktrf" in cols:
@@ -68,7 +42,7 @@ class Table1(object):
 
     def _df_annualise(self):
         cols = self.df.columns.tolist()
-        cols = self._remove_already_annualised(cols)
+        cols = self._df_remove_already_annualised(cols)
         for col in cols:
             self.df[col] = pd.to_numeric(self.df[col], errors='coerce')*self.ann*100
 
@@ -103,7 +77,7 @@ class Table1(object):
         self.df.drop('dtt', inplace=True, axis=1)
         self.df.drop('_merge', inplace=True, axis=1)
 
-    def _take_factor_sheet(self): 
+    def _df_take_factor_sheet(self): 
         # include a column of ones to calculate the average return
         self._df_include_constant_columns()
         # annualise data (we have it daily)
@@ -113,18 +87,11 @@ class Table1(object):
         # include columns of excess returns
         self._df_excess_returns()
 
-    def _LL_portfolio_sorting(self, excess = False):
+    def _LL_portfolio(self, excess = False):
         if excess:
             return [self.F[self.zip_f['ex_Lead']], self.F[self.zip_f['ex_Mid']], self.F[self.zip_f['ex_Lag']], self.F[self.zip_f['LL']], self.F[self.zip_f['LLStrong']]]
         else:
             return [self.F[self.zip_f['LeadR']], self.F[self.zip_f['MidR']], self.F[self.zip_f['LagR']], self.F[self.zip_f['LL']], self.F[self.zip_f['LLStrong']]]
-
-    def _tex_file(self, title):
-        return "tex/T1_" + title + ".txt"
-        
-    def _create_txt(self, title, text):
-        file    = Path(self._tex_file(title))
-        file.write_text(f"{text}\n\n")
 
     def _reg(self, Y, X, title):
         regs=[None]*len(Y)
@@ -135,27 +102,27 @@ class Table1(object):
         new_Y=[y.replace("ex_", "") for y in Y]
         sum = summary_col(results= regs, float_format='%0.2f', model_names=new_Y, stars=True, regressor_order=(["const"]), info_dict=None,  drop_omitted=True)
         text    = sum.as_latex()
-        self._create_txt(title, text)
+        self.aux.create_txt("T1", title, text)
 
     def _average_return(self):
-        Y       = self._LL_portfolio_sorting()
+        Y       = self._LL_portfolio()
         X       = self.df["const"]
         self._reg(Y, X, "average_return")
     
     def _capm(self):
-        Y       = self._LL_portfolio_sorting(True)
+        Y       = self._LL_portfolio(True)
         X       = self.df[["const", "mktrf"]]
         self._reg(Y, X, "capm")
 
     def _FF(self):
-        Y       = self._LL_portfolio_sorting(True)
+        Y       = self._LL_portfolio(True)
         X       = self.df[["const", "mktrf", "smb", "hml"]]
         self._reg(Y, X, "ffm")
 
     def Table1(self):
-        self._take_factor_sheet()
-        self._take_factors()
-        self._factors_order()
+        self._df_take_factor_sheet()
+        self.F, self.K  = self.aux.take_factors(self.df)
+        self.zip_f      = self.aux.factors_order(self.F, self.K)
         # first row (average return)
         self._average_return()
         # second row (capm)

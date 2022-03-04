@@ -1,0 +1,25 @@
+\begin{table}
+\caption{}
+\label{}
+\begin{center}
+\begin{tabular}{ll}
+\hline
+               & LLStrong30  \\
+\hline
+const          & 3.96*       \\
+               & (2.40)      \\
+q\_mkt         & -0.11*      \\
+               & (0.06)      \\
+q\_me          & -0.04       \\
+               & (0.07)      \\
+q\_ia          & 0.03        \\
+               & (0.19)      \\
+q\_roe         & 0.28**      \\
+               & (0.13)      \\
+R-squared      & 0.06        \\
+R-squared Adj. & 0.06        \\
+\hline
+\end{tabular}
+\end{center}
+\end{table}
+

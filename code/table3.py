@@ -1,11 +1,13 @@
 import pandas as pd
 import statsmodels.api as sm
 from statsmodels.iolib.summary2 import summary_col
-from pathlib import Path
+from aux_class import AuxClass
 
 class Table3(object):
 
-    def __init__(self, master_file, rf_file):
+    def __init__(self, master_file, rf_file, lags):
+
+        self.aux = AuxClass(master_file, rf_file)
         # DATA SETS
         self.df     = pd.read_excel(master_file, sheet_name="T3_ptfs", names=["dt", "LL38", "LLStrong38", "LL49", "LLStrong49"], dtype=str)
         self.df_rf  = pd.read_csv(rf_file, sep=";", names=["dtt", "v2", "v3", "v4", "rf"], dtype=str)
@@ -16,22 +18,12 @@ class Table3(object):
         self.df3    = self.df_ff.copy()
 
         self.ann    = 12
-        self.lags   = 24
+        self.lags   = lags
         # Factors
         self.F      = self.df.keys().tolist()
         self.K      = len(self.F)
         self.zip_f  = {}
         self.T      = len(self.df)
-
-    def _take_factors(self):
-        self.F = self.df.keys().tolist()
-        self.K = len(self.F)
-
-    def _factors_order(self):
-        flags   = [k for k in range(self.K)]
-        for flag in flags:
-            self.zip_f[self.F[flag]] = flag
-        self.zip_f
     
     def _df_include_constant_columns(self):
         self.df["const"] = [1]*self.T
@@ -39,7 +31,7 @@ class Table3(object):
         cols    = [cols[0]] + ["const"] + cols[1:-1]
         self.df = self.df[cols]
 
-    def _remove_already_annualised(self, cols):
+    def _df_remove_already_annualised(self, cols):
         if "dt" in cols:
             cols.remove("dt")
         if "mktrf" in cols:
@@ -54,7 +46,7 @@ class Table3(object):
 
     def _df_annualise(self):
         cols = self.df.columns.tolist()
-        cols = self._remove_already_annualised(cols)
+        cols = self._df_remove_already_annualised(cols)
         for col in cols:
             self.df[col] = pd.to_numeric(self.df[col], errors='coerce')*self.ann*100
 
@@ -68,8 +60,7 @@ class Table3(object):
         self.df.drop('dttt', inplace=True, axis=1)
         self.df.drop('_merge', inplace=True, axis=1)
     
-
-    def _take_factor_sheet(self): 
+    def _df_take_factor_sheet(self): 
         # include a column of ones to calculate the average return
         self._df_include_constant_columns()
         # annualise data (we have it daily)
@@ -77,15 +68,8 @@ class Table3(object):
         # merge
         self._df_merge()
 
-    def _LL_portfolio_sorting(self):
+    def _LL(self):
         return [self.F[self.zip_f['LL38']], self.F[self.zip_f['LLStrong38']], self.F[self.zip_f['LL49']], self.F[self.zip_f['LLStrong49']]]
-
-    def _tex_file(self, title):
-        return "tex/T3_" + title + ".txt"
-        
-    def _create_txt(self, title, text):
-        file    = Path(self._tex_file(title))
-        file.write_text(f"{text}\n\n")
 
     def _reg(self, Y, X, title):
         _regs=[None]*len(Y)
@@ -96,31 +80,31 @@ class Table3(object):
         new_Y=[y.replace("ex_", "") for y in Y]
         sum = summary_col(results=_regs, float_format='%0.2f', model_names=new_Y, stars=True, regressor_order=(["const"]),info_dict=None,  drop_omitted=True)
         text    = sum.as_latex()
-        self._create_txt(title, text)
+        self.aux.create_txt("T3", title, text)
     
     def _average_return(self):
-        Y       = self._LL_portfolio_sorting()
+        Y       = self._LL()
         X       = self.df["const"]
         self._reg(Y, X, "average_return")
 
     def _capm(self):
-        Y       = self._LL_portfolio_sorting()
+        Y       = self._LL()
         X       = self.df[["const", "mktrf"]]
         self._reg(Y, X, "capm")
 
     def _FF(self):
-        Y       = self._LL_portfolio_sorting()
+        Y       = self._LL()
         X       = self.df[["const", "mktrf", "smb", "hml"]]
         self._reg(Y, X, "ffm")
 
     def Table3(self):
-        self._take_factor_sheet()
-        self._take_factors()
-        self._factors_order()
+
+        self._df_take_factor_sheet()
+        self.F, self.K  = self.aux.take_factors(self.df)
+        self.zip_f      = self.aux.factors_order(self.F, self.K)
         # first row (average return)
         self._average_return()
         # second row (capm)
         self._capm()
         # third row (ff3)
         self._FF()
-
