@@ -1,0 +1,34 @@
+Consider a cross-section of assets
+$$
+	R_{t+1}^i = \bar{r}_t^i + \beta^i F_t,
+$$
+for $i=1,\ldots, G> K$, i.e., I have more assets than risk factors. 
+
+Consider a cross-section of macro and financial factors.
+$$
+	z_{t+1} = \Omega F_{t+1} + V_{t+1},
+$$
+where $\Omega\in\R^{K\times K}$, $V_{t+1}\in\R^J$ and $V\perp F$ and $K\geq K$. How much do we care of non-financial factors? THe ultimate goal is to show that if you have enough financial data, macrofactors are gonna be irrelevant to price your excess returns. And in principle (important part) you are going to be able to calculate the market price of risk of the macrofactors, non-financial factors, etc.
+
+The $\Omega$ tells you how to form your portfolio to mimmicking, i.e., build the portfolio that tracks the indicator you care about. You can think $V_{t+1}$ as a collection of measurement errors of $z_{t+1}$.
+
+Now note that, because of NA equation
+$$
+	1 =\E[(\bar{M} - b Z_{t+1})R_{t+1}^i].
+$$
+Hence,
+$$
+	r^i - r^f = b \E[z_{t+1}\cdot F_{t+1}']\beta^i,
+$$
+where $z_{t+1}\cdot F_{t+1}'\in\R^{J\times K}$.
+
+All we are doing it to plug in the definition of z accoring to the deifnition 2. Hence,
+$$
+	\begin{aligned}
+		r^i - r^f &= b' \left[\Omega \E[FF'] + \E[V F']\right]\beta^i \\
+					&= b'\cdot\Omega\cdot\Sigma\cdot\beta' = \tilde{b}\Sigma\beta^{i}
+	\end{aligned}
+$$
+Now note that $\lambda_z =\Omega\lambda_F$. For example, $\lambda_{MKT} = \approx 8\%$ in the US and $\sigma_{MKT}^2 = 0.24^2$, $\Delta c_t = 0.1 r^{ex}_{MRT_t} + \varepsilon_t^c$, with $\varepsilon_t^c$ some measurement error. By NA, we know that $\lambda_{\Delta c} = 0.1\times 8\%$.
+
+\note $\lambda_Z$ is the market price of risk of NON-financial factors, $\lambda_F$ is the market price of risk of financial factors.

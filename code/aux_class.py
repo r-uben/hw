@@ -36,7 +36,7 @@ class AuxClass(object):
         return zip_f
 
     def _tex_file(self, table, title):
-        return "tex/" + table + "_" + title + ".txt"
+        return "results/subtables/" + table + "_" + title + ".txt"
         
     def create_txt(self, table, title, text):
         file    = Path(self._tex_file(table, title))

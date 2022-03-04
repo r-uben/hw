@@ -1,0 +1,78 @@
+We are considering an agent who lives forever (infinite horizon) and whose utility function is denoted by $\u\colon\R\to\R$. Let's denote $(c_t)_{t\geq 0}$ the consumption process, and $A_t\colon\Omega\to\R$ the market value (process) of a trust fund that the agent has chosen, where $(\Omega, \F, \P)$ is an appropriate probability space over which is defined. Moreover, $\Omega$ is supposed to be discrete (although it could be generalised). Hence, for the sake of simplicity, we consider $\Omega = \{s_1,\ldots, s_K\}$, where $K>0$. The agent, who is in state $\omega\in\Omega$, wants to solve the following maximation problem
+
+\begin{equation}
+	\max_{c, \ A_{t+1}} \ w \left(c_t,\u(A_{t+1})\right)
+\end{equation}
+subject to
+$$
+	c_t + \sum_{k=1}^K A_{t+1}(\omega_{k}) \hspace{0.1cm}Q(\omega_k\mid \omega)\leq  y_t + A_t,
+$$
+where $y_t\in\R$ is the endowement at time $t$; and $w\colon\R^2\to\R$ is the wealth. Here $Q(\cdot\mid\omega)\colon\Omega\to\R$ stands for the cost of $A_{t+1}$ given current state $\omega\in\Omega$ (calculated for ``tomorrow'').
+
+We are taking $A$ to be an Arrow-Debreu security, i.e., 
+$$
+	\left(\text{Payoff of } A_{t+1}(\omega_k)\right)(\omega) = \mathds{1}_{\left\{ \omega= \omega_k\right\}}(\omega).
+$$
+In principle the guy may decide to waist resources (that's what it means less or equal...). However, because of non-satiation property, we just take the constraint to be binding. 
+
+The Lagrangian is going to be, for a certaing $\lambda > 0$,
+\begin{equation}
+	\L = w \left(c_t, \u(A_{t+1})\right) + \lambda\left(y_t+A_t - c_t - \sum_{k=1}^K A_{t+1}(\omega_k) \hspace{0.1cm}Q(\omega_k\mid \omega)\right).
+\end{equation}
+\noindent \textbf{Note:} The Lagrangian is can be interpreted of  the marginal utility of consumption but also as a shade of price (the price you must pay to consume more).
+
+The FOC are thus
+$$
+	\begin{aligned}
+		\partial_{c_t}\L 	& = \partial_{c_t} w - \lambda = 0 \implies w_{1,t} = \lambda;\\
+		\nabla_{A_{t+1}(\cdot)}\L 	&= \partial_2 w \ \nabla_{A_{t+1}(\cdot)} \u - \lambda \overline{Q}(\cdot\mid \omega)\implies  w_{2,t+1}  \nabla_{A_{t+1}(\cdot)} \u = \lambda \overline{Q}(\cdot\mid \omega),
+	\end{aligned}
+$$
+where $w_{1,t} = \partial_{c_t} w$, $w_{2,t+1} = \partial_2w(c,\u(A_{t+1}))$, and $\overline{Q}(\cdot\mid \omega) = (Q(\omega_1)\mid\omega, \ldots, Q(\omega_k\mid \omega)).$
+
+Note that the last condition are indeed $K$ different equations, one for each state $\omega_k\in \Omega$, i.e., 
+$$
+	w_{2,t+1} \cdot \partial_{A_{t+1}(\omega_{k})}\u = \lambda Q(\omega_k\mid s).
+$$
+\underline{Envelope theorem}: When having an intertemporal problem we use Envelope theorem (my wealth today is given; but at the same time I'm choosing my wealth from tomorrow; the envelope theorem says how your wealth today will affect your wealth tomorrow):
+$$
+	\nabla_{A_t} \u = \nabla_{A_t}\L = \lambda = w_{1,t}.
+$$
+In particular, we are going to have
+$$
+	Q(\omega_k\mid \omega) = \frac{w_{1,t+1}}{w_{1,t}}\ w_{2,t+1} = \imrs(\omega_k,\omega),
+$$
+where \imrs \ stands for the  Intertemporal Marginal Rate of Substitution, which is a random variable $\imrs(\cdot\mid \omega)$ on $\Omega$, i.e., $\imrs(\cdot\mid\omega)\colon\Omega\to\R$.
+
+\begin{example}
+	Let's consider, given current state $\omega\in\Omega$,
+	$$
+		w(c_t, \u(A_{t+1})) = \frac{c_{t}^{1-\gamma}}{1-\gamma} + \delta \sum_{k=1}^K \u(A_{t+1}(\omega_k))\pi(\omega_{k}\mid \omega),
+	$$
+	where $ \sum_{k=1}^K \u(A_{t+1}(\omega_k))\pi(\omega_{k}\mid \omega)= \E_t[\u(A_{t+1})]$ on the probability space $(\Omega,\mathcal{F}(\Omega), \pi)$. Hence, in this case
+	$$
+		\begin{aligned}
+			w_{1,t} &:= \partial_{c_{t}} w = c_t^{-\gamma};\\
+			w_{2,{t+1}} &:= \nabla_{\u(A_{t+1}(\cdot))}w = \delta\,\overline{\pi}(\cdot\mid \omega),
+		\end{aligned}
+	$$
+	where $\overline{\pi}(\cdot\mid \omega) = (\pi(\omega_1\mid\omega),\ldots\pi(\omega_K\mid\omega))$. Hence, for reach $k=1,\ldots, K$,
+	$$
+		\imrs(\omega_k\mid \omega) = \frac{c_{t+1}^{-\gamma}}{c_t^{-\gamma}} \delta\pi(\omega_k\mid \omega) = \delta \left(\frac{c_{t+1}}{c_t}\right)^{-\gamma}\pi(\omega_k\mid \omega),
+	$$
+	where $\gamma$ stands for the risk aversion parameter.
+\end{example}
+\textbf{Definition:} For all $k=1,\ldots, K$ and given state $\omega\in\Omega$, $\sdf(\omega_k\mid \omega) = \frac{\imrs(\omega_k\mid \omega)}{\pi(\omega_k\mid \omega)}$.
+
+\question What shall I do to ``secure'' 1 unit of consumption tomorrow? Buy $A(\omega_k) = 1$ for all~$\omega_k\in \Omega$.
+
+\question: What shall I do to mimic the payoff $X = (x(\omega_1),\ldots, x(\omega_K))$? Simple: Linear combination of Arrow-Debreu securities (which are indeed a base) such that $A(\omega_k) = x(\omega_k), \forall \omega_k\in \Omega$. Hence,
+$$
+	P(X) = \sum_{k=1}^K Q(\omega_k\mid \omega)\cdot X(\omega_k) = \sum_{k=1}^K\imrs(\omega_k\mid \omega) \cdot X(\omega_k) = \sum_{k=1}^K \sdf(\omega_k\mid \omega)\cdot X(\omega_k)\cdot\pi(\omega_k\mid \omega).
+$$
+Hence,
+$$
+	P(X) = \E_t[\sdf(\cdot)\,X].
+$$
+
+

@@ -1,11 +1,9 @@
-from re import X
 import pandas as pd
 import statsmodels.api as sm
 from statsmodels.iolib.summary2 import summary_col
 from aux_class import AuxClass
 
 class Table7(object):
-
 
     def __init__(self, master_file, rf_file, lags):
         self.aux = AuxClass(master_file, rf_file)
@@ -43,30 +41,16 @@ class Table7(object):
         cols    = ["const"] + cols[:-1]
         self.df = self.df[cols]
 
-    def _df_remove_already_annualised(self, cols):
+    def _df_remove_cols_to_not_annualise(self, cols):
         if "dt" in cols:
             cols.remove("dt")
         if "const" in cols:
             cols.remove("const")
-        # if "mktrf" in cols:
-        #     cols.remove("mktrf")
-        # if "smb" in cols:
-        #     cols.remove("smb")
-        # if "hml" in cols:
-        #     cols.remove("hml")
-        # if "const" in cols:
-        #     cols.remove("const")
-        # if "mktrf2" in cols:
-        #     cols.remove("mktrf2")
-        # if "smb2" in cols:
-        #     cols.remove("smb2")
-        # if "hml2" in cols:
-        #     cols.remove("hml2")
         return cols
 
     def _df_annualise(self):
         cols = self.df.columns.tolist()
-        cols = self._df_remove_already_annualised(cols)
+        cols = self._df_remove_cols_to_not_annualise(cols)
         for col in cols:
             self.df[col] = pd.to_numeric(self.df[col], errors='coerce')*self.ann*100
     

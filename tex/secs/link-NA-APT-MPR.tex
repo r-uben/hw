@@ -1,0 +1,51 @@
+Let's consider $N$ securities, $i=1,\ldots, N$ such tat
+$$
+	r_{t+1}^i = \bar{r}^i + \beta^i\cdot F_{t+1},
+$$
+where $\beta^i\in \R^K$, and assume that
+$$
+	\bar{r}^i - r^f = \sum_{k=1}^K \beta_k^i \lambda_k = \beta^i\cdot\lambda.
+$$	
+This is called \textsc{Beta Model}, which is the model which people could easily estimate with a simple regression.
+
+By NA, we know that
+$$
+	\bar{r}^i - r^f= b\cdot(\Sigma\beta').
+$$
+For the Beta model to be consistent with no arbitrace (NA), all you need is the following
+$$	
+	b\cdot(\Sigma \beta^i) = \lambda\cdot\beta^i, \quad\qquad\forall i=1,\ldots, N.
+$$
+Hence, since we have $N$ equations with $N$ unknowns, 
+$$
+	b'\Sigma = \lambda'.
+$$
+In general,
+$$
+	b' = \lambda'\Sigma^{-1}.
+$$
+where $\Sigma = \V(F)$. 
+
+Let's consider the special case in which $\Sigma = \text{diag}(\sigma_1^2,\ldots, \sigma_k^2)$. hence,
+$$
+	b_k =\frac{\lambda_k}{\sigma_k^2}, \quad, \& \lambda_k = b_k\sigma_k^2.
+$$
+For example, with CRRA, 
+$$
+	b = \gamma^\text{RRA}, \quad \& F_{t+1} = \Delta c_{t+1},
+$$
+and we know that 
+$$
+	m_t = \log \delta - \gamma\Delta c_{t+1}.
+$$
+Hence, it is clear that that $\lambda_{\Delta c} = \gamma \sigma_k^2$.
+
+However, what if $\Sigma$ is not diagonal. We describe the steps that should be followed in \textsc{Matlab} or other software:
+\begin{enumerate}[wide, labelindent=1cm, itemsep=0cm, topsep=0cm]
+	\item Take $\Sigma $ and find $\Gamma$ such that $\Gamma\cdot\Gamma = \Sigma$. Call it $\Gamma = \Sigma^{\frac{1}{2}}$.
+	\item Take $\text{inv}(\Gamma)$ and call it $\Sigma^{-\frac{1}{2}}$.
+	\item Work with $\tilde{F}_t = \Sigma^{-\frac{1}{2}} F_t$ (orthogonalisation). Hence,
+	$$
+		\E[\tilde{F}\tilde{F}'] = \Sigma^{-\frac{1}{2}}\Sigma\Sigma^{-\frac{1}{2}} = I.
+	$$
+\end{enumerate}

@@ -1,0 +1,40 @@
+Here we are considering
+$$
+	\begin{aligned}
+		M_t 	&= \bar{M}_{t-1} - b_{t-1}F_t\\
+		R_t^j 	&= \bar{r}_{t-1} + \beta_{t-1}^j F_t
+	\end{aligned}
+$$
+where $\E_t[F_{t+1}] = 0$ and $\sigma_t[F_{t+1}] = \bar{\sigma}^2$, $\forall  t$.
+
+Once we have this we apply the NA equation, i.e., 
+$$
+	1 = \E_t [ M_{t+1} R_{t+1}^j] \implies \frac{\bar{R}_t^j}{\bar{R}^f} - 1 \approx \E_t[R_{t+1}-R_t^f] = b_t\beta_t^j\bar{\sigma}^2
+$$
+Everything should be divided by the risk-free rate, but the fact is that it's usually very small that we can approximate it. We call 
+$$
+	\frac{\bar{R}_t^j}{\bar{R}^f} - 1
+$$
+the time varying risk premium. During a recession, risk premia tend to increase. This could be true if the loading factors, $b_t$ vary. 
+
+Now note that
+$$
+	\begin{aligned}
+		P_t & = \E_t [M_{t+1}(P_{t+1} + D_{t+1})]\\
+			&= \E_t[M_{t+1}[\E_{t+1}[(P_{t+2} + D_{t+2})M_{t+2}]+D_{t+1}]]\\
+			&= \cdots = \E_{t}\left[\sum_{j\geq 1} D_{t+j}\prod_{k=1}^j M_{t+k}\right],
+	\end{aligned}
+$$
+where $\prod_{k=1}^j M_{t+k}$ is the multiperiod SDF. So the variations of $P_t$ are captures by variations in the time-varying (multiperiod) SDF and changes in dividends.
+
+\note The sentiment, $b_t$, is time-varying.
+
+Now note that the unconditional risk premium 
+$$
+	\E[\E_t[R_{t+1}^j- R^f]] = \E[\beta_t^j b_t]\bar{\sigma}^2,
+$$	
+which is equal to $\E[\beta^j]\E[b_t]\bar{\sigma}^2$ if and only if the sensitivity coefficients (investor's feelings), $b$, are independent of the firm's performance, $\beta$, which is actually not very reasonable. Just note that high leveraged firms are not gonna be indifferent.
+
+ 
+
+\note Fragile firms have high $\beta$.

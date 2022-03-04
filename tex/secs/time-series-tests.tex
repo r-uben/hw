@@ -1,0 +1,5 @@
+TAke $H_0\colon \alpha^j = 0$ for all $j=1,\ldots, N$. Here we take $T$ the number of observations in the time series, $N$ the number of assets, and $K$ the number of factor that I care about. Hence, 
+$$
+\frac{T-N-K}{N}\times\left(1 + \E_T[F]\times \hat{\Omega}^{-1}\times\E_T[F']\right)^{-1}\hat{\alpha}'\hat{\Sigma}^{-1}\hat{\alpha}\sim F_{N, T-N-K}
+$$
+where $\E_T$ denotes that we are just taking the expectation in the time series (it is a vector); $\hat{\Omega} = \V(F)$ and $\hat{\Sigma} = \E[\varepsilon'\varepsilon]$.

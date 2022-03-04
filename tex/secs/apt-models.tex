@@ -1,0 +1,156 @@
+We are considering two stochastic processes defined by
+\begin{equation}
+	\begin{aligned}
+		M_t &= \bar{M}_{t-1} - b \cdot F_t,\\
+		R_t^j &= \bar{R}^j_{t-1} +\beta^j \cdot F_t,
+	\end{aligned}
+\end{equation}
+where $j=1,\ldots, N$ stands for $N$ different assets for which we coinsider the gross returns. The stochastic discount factor, $M_t$, is an affine function of an appropriate number of factors, say $K$, and it's the same across all the assets but not across all the states (obviously from the equation). In other words, only the second equation is asset specific. Here we are considering that 
+$$
+	\E[F_t] = 0, \quad\quad \sigma[F] = \Sigma,
+$$ where $\Sigma$ denotes the variance-covariance matrix. Also, $R_t^j$ denotes the gross return of asset $j=1,\ldots, N$ at time $t$. The bar denotes the expected part, and the no-bar part denotes the unexpected part. On th eother hand, $\beta^j\in\R^K$ is asset-specific, which is the key characteristic of an asset (it captures sensitivities, risk, etc.).
+
+\noindent \textbf{No Arbitrage Equation.} Note that when we pay $P_t$ today to get $D_{t+1} + P_{t+1}$ tomorrow, we have the following equations: 
+$$
+	\begin{aligned}
+		P_t& =\E_t[M_{t+1}(P_{t+1}+D_{t+1})]\\
+		R_{t+1}& = \frac{P_{t+1}+D_{t+1}}{P_t}.
+	\end{aligned}
+$$
+Both imply
+$$
+	1 = \E_t[M_{t+1}R_{t+1}],
+$$
+i.e., \mc\ (left-hand side) equals \mr\ (right-hand side) (not asset specific)
+
+\note The $b\in\R^K$ captures the risk preferences.
+
+\subsection{Risk-free bond}
+Now, in order to include a risk-free bond, we need to set $\beta^j = 0$ for that asset. In that case, $R^j_{t+1} = R^f_{t}$ for every time-state. Hence,
+
+\note Risk premia: average returns that stocks must pay to compensate the firms.
+
+Now, note that
+\begin{equation}\label{Rf-Mt}
+	1 = \E[(\bar{M}_t - bF_{t+1})\bar{R}_f^t] \iff 1 - \bar{M}_t\bar{R}_t^f - b\E[F_{t+1}]\bar{R}_f.
+\end{equation}
+Since $\E[F_{t+1}] = 0$, then 
+$$
+	\bar{R}_t^f = \frac{1}{\bar{M}_t}.
+$$
+We would like eventually to figure out what the $b$ is. 
+
+\note $\beta^j$ are easy to find from time-series: We are gonna have
+$$
+	X = \begin{bmatrix}
+		1_{T\times 1} & F
+	\end{bmatrix},
+$$
+so that
+$$
+	\beta^j = (X' X)^{-1}X'\cdot R^j.
+$$
+The only thing we need to choose are the factors (big debate ein Asset Pricing). 
+
+\subsection{Equity}
+In this case,
+$$
+	1 = \E[(\bar{M}_t-bF_{t+1})(\bar{R}_{t}-\beta^j F_{t+1})],
+$$
+obtaining from this equation and subtracting it (\ref{Rf-Mt})
+$$
+	 0 = \bar{M}_t \cdot\left(\bar{R}_t^j-R_t^f\right) - b\Sigma(\beta^j)',
+$$
+where $\bar{M}_t = \frac{1}{R^f_1}\approx 1$. Hence,
+$$
+	\bar{R}^j - R^f_t \approx b \Sigma \beta^j,
+$$
+where $\bar{R}^j - R^f  = \E[R^f_{t+1}-R_t^f]$ is the risk premia.
+
+\note The factor loadings are constant across stocks. Different stocks under no arbitrage may have different risk premia.
+
+From all the previous things that have been said, if we define $R_{t+1}^{j,ex} := R_{t+1}^j - R_t^f$
+$$
+	 0 = \E[M_{t+1}R_{t+1}^{j, ex}] = \E[M_{t+1}]\E[R_{t+1}^{j,ex}]  +\cov(M_{t+1}, R^{ex,j}_{t+1}). 
+$$
+Since $\E[M_{t+1}] \approx$, then
+\begin{equation}
+	\E[R_{t+1}^{j,ex}] \approx -\cov(M_{t+1}, R^{ex,j}_{t+1}).
+\end{equation}
+
+Risky assets are risky under no arbitrage because they pay a lot when the marginal utility is low (and viceversa). 
+
+Gold is a safe asset. You will lose money on good times (negative excess returns) but it pays a lot in bad times, i.e., gold has a positive covariance with respect to the \sdf.
+
+\subsection{Log-Linear models}
+
+Let's consider a random variable $x\sim N(\mu, \sigma^2)$. Let's define $Y = \exp x$. Hence,
+\begin{enumerate}[wide, itemsep=0cm, topsep=0cm]
+	\item $Y > 0$;
+	\item $\E[Y] = \exp \left(\mu + \frac{1}{2}\sigma^2\right)$.
+\end{enumerate}
+\note Second order moments are, in Finance, first order issues (look the covariance).
+
+We will denote $m_{t+1} = \log M_{t+1} = \bar{m}_{t+1}-b F_{t+1}$. Hence, $M_{t+1} = \exp m_{t+1}$ will be always positive. Also, $r_{t+1}^j := \log R_{t+1}^j = \bar{r}_t^j + \beta^j F_{t+1}$. 
+
+\note $\log(R^j) = log(1+r^j)\approx r^j$, i.e., the $b$'s can be understood as elasticities.
+
+\begin{example}
+	Consider again
+	$$
+		M_{t+1} = \delta \left(\frac{c_{t+1}}{c_t}\right)^{-\gamma}.
+	$$
+	From now on, let's consider
+	$$
+		\frac{c_{t+1}}{c_t} := \exp\left(\Delta c_{t+1}\right),
+	$$
+	where
+	$$
+		\Delta c_{t+1}= c_{t+1}-c_t.
+	$$
+	In that situation,
+	$$
+		m_{t+1} = \log M_{t+1} = \log \delta - \gamma \Delta c_{t+1},
+	$$
+	i.e., it's linear in log-units.
+\end{example}
+
+Regarding the risk-free rate, note that
+$$
+	1 = \E[M_tR_t^f] = \E[\exp(\bar{m}_t+b F_{t+1})\exp \bar{r}_t^f] = \E[\exp y_{t+1}],
+$$
+whhere 
+$$
+	y_{t+1} = \bar{m}_t + \bar{r}_t^f + b F_{t+1}.
+$$
+Hence, 
+$$
+	\begin{aligned}
+		\E[y_{t+1}] & = \bar{m}_{t} + \bar{r}_t^f\\
+		\V(y_{t+1}) & = b \Sigma b'.
+	\end{aligned}
+$$
+Hence, 
+$$
+	\E[\exp y_{t+1}] = \exp(\bar{m}_t + \bar{r}_t^f + \frac{1}{2}b\Sigma b') = 1. 
+$$
+Taking logs,
+$$
+	\bar{r}_t^f = -\bar{m}_t - \frac{1}{2}b\Sigma b',
+$$
+i.e., when uncertainty goes up, the risk-free rate goes down (in real life, it's because people shift to bonds and then their price goes up, so that the rate goes down).
+
+Next week we modify the stuff for stocks and
+$$
+	\begin{aligned}
+		\bar{r}_t^j - \bar{r}_t^f &= -\cov_t\left(\beta^j F_{t+1}, -bF_{t+1}\right) - \frac{1}{2}\V_t\left(r_{t,t+1}^j - r_t^f\right)\\
+		&=  -\cov_t\left(\beta^j F_{t+1}, -bF_{t+1}\right) - \frac{1}{2}\V_t\left(r^{ex,j}_{t+1}\right),
+	\end{aligned}
+$$
+where 
+$$
+	\V_t\left(r^{ex,j}_{t+1}\right) = \beta^j \Sigma \beta^j.
+$$
+It is not very surprising that the variance term appears, because if the excess returns are very volatile, when taking logs, then the Jensen's inequality is stronger (this needs to be better explained but the idea is to compare the graphs of the returns and the log-returns and taking into account that $x\mapsto \log x$ is a concave function.)
+
+\note The stochastic is not linear in levels but linear in log-levels. Also recall that it can change over time.

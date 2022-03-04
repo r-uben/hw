@@ -1,0 +1,63 @@
+\renewcommand{\t}{\text{\tiny T}}
+\newcommand{\se}{\text{se}}
+Let's assume that we want to estimate $g(b)$, where $b\in\R^K$, and $g\colon\R^K\to\R^N$, where
+$$	
+	g(b) = \E[\langle b, F_{t+1}\rangle R - \sum_{i=1}^N\mathfrak{e}_i] = 0,
+$$	
+whicn is equal to zero by the NA equation. Recall again that $n\in\R^K$, $F\in\R^K$ and $\mathfrak{e}_i^j = 1$ if $i=j$ and $0$ otherwise.
+
+We just need
+$$
+	\min_b \Omega(b) 
+$$ 
+where
+$$	
+	\Omega(b) = g(b) \cdot I \cdot g(b)^\t.
+$$
+To be clear,
+$$
+	M_{t+1} = b\cdot F_{t+1}, \quad\quad\quad  d_{t+1} = F_{t+1}R_{t+1}\in\R^{K\times N}.
+$$
+Now note that
+$$
+	 g(b) \cdot I \cdot g(b)^\t = (b^\t\E[d_{t+1}] - 1)(\E[d_{t+1}]^\t b -1)
+$$
+The FOC are
+$$
+	b = \left[\E[d]\E[d^\t]\right]^{-1}\E[d]\sum_{i=1}^N\mathfrak{e}_i.
+$$
+This is the so-called ``first-step'' of the GMM. 
+
+\subsection{Inference}
+
+Here we must note that
+$$
+	\V(\hat{b}) = \frac{1}{T}\left(\nabla g^\t I \nabla g\right)^{-1}\left(\nabla g^\t I S I \nabla g\right)\left(\nabla g' I \nabla g\right)^{-1}.
+$$
+All we need to clarify is who is
+$$
+	S = \V(\varepsilon), 
+$$
+where $\varepsilon^i_t = \langle\hat{b} F_t\rangle \ R_t^i -\sum_{i=1}^N\mathfrak{e}_i$, i.e., the equivalent to the residual of the regression.
+
+The second step mus be focusing on
+$$
+	\Omega = g(b) S^{-1} g(b)^\t.
+$$
+Hence,
+$$
+	\V(\hat{b}_{\text{2nd Step}}) = \frac{1}{T}\left(\nabla g^\t S^{-1}\nabla g\right)^{-1}.
+$$
+In all of this,
+$$
+	\partial_{b_k} g = \E[R^i F^j].
+$$
+
+Let's assume that $\lambda = f(b)$ and $\hat{b}$ and $\text{se}(\hat{b}) = \hat{\sigma}$. How to recover $\hat{\lambda}$ and $\text{se}\in(\hat{\lambda})$? Recall that $\hat{\lambda} = f(\hat{b})$. Using Taylor (Delta method):
+$$
+	\lambda\approx f(b_0) + \partial_{b}f\big|_{b_0} \Delta b.
+$$
+Now note that $\hat{\gamma} = 3\hat{b}$. Hence,
+$$
+	\se(\hat{\lambda}) = \partial_b f\big|_{b_0}\se(\hat{b})
+$$
