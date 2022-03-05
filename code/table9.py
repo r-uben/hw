@@ -1,5 +1,5 @@
 from cmath import nan
-from unicodedata import name
+from numpy.linalg import inv
 import numpy as np
 import pandas as pd
 import statsmodels.api as sm
@@ -37,7 +37,8 @@ class Table9(object):
                 self.LL[49]         = self.LL49
 
         # List with the number of firms that we are using
-        self.num_firms = num_firms
+        self.num_firms  = num_firms
+        self.lags       = 12
 
         # Constructing every data set
         self.df = {}
@@ -55,7 +56,10 @@ class Table9(object):
 
         # Returns
         self.R = {}
-
+        # FR
+        self.allFR = {}
+        # b
+        self.b = {}
 
     def _df_set_time_frame(self, df = None):
         if df is None: 
@@ -100,14 +104,51 @@ class Table9(object):
             self.F[num] = self.f.join(self.LL[num])
         
     def _E_d(self):
+        self.allFR = {}
+        # Loop for each number of firms (we get a dataframe)
         for num in self.num_firms:
-            R = self.R[num].values
-            F = self.F[num].values
-            F = np.delete(F, 0,0)
-            F = np.transpose(F)
-            print(F.shape, R.shape)
-
-
+            # Rename the factor df
+            F = self.F[num]
+            # Remove the first row (because the returns are calculated only after t=1)
+            F = F.iloc[1:,:]
+            # Rename the return df
+            R = self.R[num]
+            # Create the dictionary for the products of F and R associated to the situation 
+            # in which there are "num" firms
+            regFR = {}
+            # For a given number of firms, we loop among each one (we get temporal columns)
+            for n in R.columns.tolist():
+                # For EACH firm, create the FR dictionary with the products of factors and returns
+                FR = {}
+                # Loop among each factor, which are going to be in the header of a new data
+                # frame containing the products FR
+                for f in F.columns.tolist():
+                    # Multiply through each date
+                    FR[f] = F[f].mul(R[n])
+                FR = pd.DataFrame(FR)
+                FR = self.aux.include_constant_columns(FR)
+                x = FR["const"]
+                regs = []
+                for f in FR.columns.tolist()[1:]:
+                    y = FR[f]
+                    reg = sm.OLS(y.astype(float), x.astype(float)).fit(cov_type='HAC', cov_kwds={'maxlags':self.lags})                    
+                    regs.append(float(reg.params))
+                # Include the regression in a dictionary (with the regressions for the 4 factors FOR EVERY FIRM)
+                regFR[n] = regs
+            regFR = pd.DataFrame(regFR)
+            regFR.index = ["mktrf", "smb", "hml", "LL"]
+            regFR = self.aux.replace_nan_by_row(regFR)
+            # Include the resuls, as A MATRIX, to the dictionary with all the different situation (30, 38, 48)
+            self.allFR[num] = regFR.values
+        
+    def _compute_b(self):
+        for num in self.num_firms:
+            E_d = self.allFR[num]
+            self.b[num] = inv(E_d @ np.transpose(E_d)) @ E_d @ np.ones((num, 1))
+            self.b[num] = [k[0] for k in self.b[num]]
+        self.b = pd.DataFrame(self.b)
+        self.b.index = ["mktrf", "smb", "hml", "LL"]
+        print(self.b)
 
     def Table9(self):
         # Take the correct time frame
@@ -120,3 +161,5 @@ class Table9(object):
         self._df_build_factors_dataset()
         # Calculate the "E[d] = E[FR]"
         self._E_d()
+        # Compute the bs
+        self._compute_b()

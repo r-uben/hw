@@ -16,12 +16,21 @@ class AuxClass(object):
         self.zip_f  = {}
 
 
+    def include_constant_columns(self, df):
+        T = len(df)
+        df["const"] = [1]*T
+        cols    = df.columns.tolist()
+        cols    = ["const"] + cols[:-1]
+        df = df[cols]
+        return df
+
     def set_date_as_index(self, df):
         if "dt" in df.columns.tolist():
             df["dt"] = df["dt"].str.slice(0,6)
             df = df.set_index("dt")
             df = df.rename_axis(index=None, columns=None)
             df.index = pd.to_datetime(df.index, format="%Y%m").strftime("%Y-%m")
+            df = df.astype(float)
             return df
         else:
             return 'Please, add a temporal column'
@@ -52,3 +61,13 @@ class AuxClass(object):
     def create_txt(self, table, title, text):
         file    = Path(self._tex_file(table, title))
         file.write_text(f"{text}\n\n")
+
+    def replace_nan_by_row(self,df):
+        # Thanks to Andy Hayden: https://stackoverflow.com/questions/33058590/pandas-dataframe-replacing-nan-with-row-average
+        m = df.mean(axis=1)
+        for i, col in enumerate(df):
+            # using i allows for duplicate columns
+            # inplace *may* not always work here, so IMO the next line is preferred
+            # df.iloc[:, i].fillna(m, inplace=True)
+            df.iloc[:, i] = df.iloc[:, i].fillna(m)
+        return df
