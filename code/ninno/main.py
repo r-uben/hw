@@ -288,7 +288,7 @@ df=df.set_index(["dtt"]).sort_index()
 
 #https://bashtage.github.io/linearmodels/
 #https://bashtage.github.io/linearmodels/asset-pricing/asset-pricing/linearmodels.asset_pricing.model.LinearFactorModelGMM.html#linearmodels.asset_pricing.model.LinearFactorModelGMM
-#https://bashtage.github.io/linearmodels/system/examples/three-stage-ls.html#System-GMM-Estimation
+#https://bashtage.github.io/linearmodels/system/examples/three-stage-ls.html#System  -GMM-Estimation
 
 
 

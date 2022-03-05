@@ -71,9 +71,11 @@ class Table1(object):
             move += 1
 
     def _df_merge(self):
+        # Remove the day in the date to get only the year and the month (monthly date)
         self.df["dtt"] = self.df["dt"].str.slice(0, 6)
-        df1 = self.df.copy()
-        self.df = df1.merge(self.df2, how='inner', on="dtt", left_on=None, right_on=None, left_index=False, right_index=False, sort=False, suffixes=('_left', '_right'), copy=True, indicator=True, validate="one_to_one")
+        # Merge both data sets to get only one single dataset with all what's important
+        self.df = self.df.merge(self.df2, how='inner', on="dtt", left_on=None, right_on=None, left_index=False, right_index=False, sort=False, suffixes=('_left', '_right'), copy=True, indicator=True, validate="one_to_one")
+        # Remove the link columns
         self.df.drop('dtt', inplace=True, axis=1)
         self.df.drop('_merge', inplace=True, axis=1)
 

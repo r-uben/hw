@@ -9,13 +9,13 @@ def find_file(name):
 
 if __name__=="__main__":
 
-    master_file  = find_file("Data_master.xlsx")
-    rf_file      = find_file("FF4_monthlyKF.csv")
-#     T1           = Table1(master_file, rf_file, 24)
+    master_file     = find_file("Data_master.xlsx")
+    monthly_factors = find_file("FF4_monthlyKF.csv")
+#     T1           = Table1(master_file, monthly_factors, 24)
 #     T1.Table1()
 #     T3           = Table3(master_file, rf_file, 12)
 #     T3.Table3()
 #     T7           = Table7(master_file, rf_file, 12)
 #     T7.Table7()
-    T9          = Table9(master_file, rf_file, [30, 38, 49])
+    T9          = Table9(master_file, monthly_factors, [30, 38, 49])
     T9.Table9()
