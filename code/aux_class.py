@@ -26,7 +26,7 @@ class AuxClass(object):
 
     def set_date_as_index(self, df):
         if "dt" in df.columns.tolist():
-            df["dt"] = df["dt"].str.slice(0,6)
+            df.loc[:, "dt"] = df["dt"].str.slice(0,6).tolist()
             df = df.set_index("dt")
             df = df.rename_axis(index=None, columns=None)
             df.index = pd.to_datetime(df.index, format="%Y%m").strftime("%Y-%m")

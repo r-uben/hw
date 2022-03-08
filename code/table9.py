@@ -20,21 +20,21 @@ class Table9(object):
         # Read (monthly) LL factor files
         self.LL = {}
         if 30 in num_firms:
-            self.LL30           = pd.read_excel(master_file, sheet_name="T1_ptfs", names=["dt", "LeadR", "MidR", "LagR", "Lead", "Mid", "Lag", "LL", "LLStrong", "mktrf", "smb", "hml"], dtype=str)
-            self.LL30           = self.aux.set_date_as_index(self.LL30)
-            self.LL30["LL"]     = pd.to_numeric(self.LL30["LL"], errors='coerce')*100
-            self.LL[30]         = self.LL30[["LL"]]
+            self.LL30               = pd.read_excel(master_file, sheet_name="T1_ptfs", names=["dt", "LeadR", "MidR", "LagR", "Lead", "Mid", "Lag", "LL", "LLStrong", "mktrf", "smb", "hml"], dtype=str)
+            self.LL30               = self.aux.set_date_as_index(self.LL30)
+            self.LL30.loc[:,"LL"]   = (pd.to_numeric(self.LL30["LL"], errors='coerce')*100).tolist()
+            self.LL[30]             = self.LL30[["LL"]]
         if 38 or 49 in num_firms:
-            self.LL38and49      = pd.read_excel(master_file, sheet_name="T3_ptfs", names=["dt", "LL38", "LLStrong", "LL49", "LLStrong49"], dtype=str)
-            self.LL38and49           = self.aux.set_date_as_index(self.LL38and49)
+            self.LL38and49          = pd.read_excel(master_file, sheet_name="T3_ptfs", names=["dt", "LL38", "LLStrong", "LL49", "LLStrong49"], dtype=str)
+            self.LL38and49          = self.aux.set_date_as_index(self.LL38and49)
             if 38 in num_firms:
-                self.LL38           = self.LL38and49[["LL38"]]
-                self.LL38["LL38"]   = pd.to_numeric(self.LL38["LL38"], errors='coerce')*100
-                self.LL[38]         = self.LL38
+                self.LL38                = self.LL38and49[["LL38"]]
+                self.LL38.loc[:, "LL38"] = (pd.to_numeric(self.LL38["LL38"], errors='coerce')*100).tolist()
+                self.LL[38]              = self.LL38
             if 49 in num_firms: 
-                self.LL49           = self.LL38and49[["LL49"]]
-                self.LL49["LL49"]   = pd.to_numeric(self. LL49["LL49"], errors='coerce')*100
-                self.LL[49]         = self.LL49
+                self.LL49                = self.LL38and49[["LL49"]]
+                self.LL49.loc[:,"LL49"]  = (pd.to_numeric(self. LL49["LL49"], errors='coerce')*100).tolist()
+                self.LL[49]              = self.LL49
 
         # List with the number of firms that we are using
         self.num_firms  = num_firms
@@ -73,26 +73,16 @@ class Table9(object):
             df = df[init_index:end_index]
             return df
 
-    def _df_remove_invalid_pfs(self):
-        for num in self.num_firms:
-            N = len(self.df[num].columns)
-            T = len(self.df[num].index)
-            for n in range(1,N+1):
-                mean = np.mean(self.df[num][n])
-                for i in self.df[num].index.tolist():
-                    if self.df[num][n][i] == 0 or self.df[num][n][i] == nan:
-                        self.df[num][n][i] = mean
-
     def _df_build_return_datasets(self):
         for num in self.num_firms:
             df = self.df[num]
             T = df.index.tolist()
-            self.R[num] = {'dt' : T[1:]}   
+            self.R[num] = {'dt' : T}   
             for n in df.columns:
                 self.R[num][n] = []
-                for t in T[:-1]:
-                    Rtt = df[n][T[T.index(t)+1]] / df[n][t]
-                    self.R[num][n].append(Rtt)
+                for t in T:
+                    Rt = df[n][t] + 1 #/ df[n][t]
+                    self.R[num][n].append(Rt)
             self.R[num] = pd.DataFrame(self.R[num]).set_index('dt')
             self.R[num] = self.R[num].rename_axis(index=None, columns=None)
 
@@ -101,16 +91,14 @@ class Table9(object):
         self.f = self._df_set_time_frame(self.f)
         for num in self.num_firms:
             # Join the three FF factors with the LL factor
-            self.F[num] = self.f.join(self.LL[num])
-        
+            self.F[num] = self.f.join(self.LL[num]) 
+
     def _E_d(self):
         self.allFR = {}
         # Loop for each number of firms (we get a dataframe)
         for num in self.num_firms:
             # Rename the factor df
             F = self.F[num]
-            # Remove the first row (because the returns are calculated only after t=1)
-            F = F.iloc[1:,:]
             # Rename the return df
             R = self.R[num]
             # Create the dictionary for the products of F and R associated to the situation 
@@ -129,16 +117,16 @@ class Table9(object):
                 FR = self.aux.include_constant_columns(FR)
                 x = FR["const"]
                 regs = []
-                for f in FR.columns.tolist()[1:]:
+                for f in FR.columns.tolist():
                     y = FR[f]
                     reg = sm.OLS(y.astype(float), x.astype(float)).fit(cov_type='HAC', cov_kwds={'maxlags':self.lags})                    
                     regs.append(float(reg.params))
                 # Include the regression in a dictionary (with the regressions for the 4 factors FOR EVERY FIRM)
-                regFR[n] = regs
+                regFR[n] = regs[1:]
             regFR = pd.DataFrame(regFR)
             regFR.index = ["mktrf", "smb", "hml", "LL"]
-            regFR = self.aux.replace_nan_by_row(regFR)
             # Include the resuls, as A MATRIX, to the dictionary with all the different situation (30, 38, 48)
+            regFR = self.aux.replace_nan_by_row(regFR)
             self.allFR[num] = regFR.values
         
     def _compute_b(self):
@@ -153,8 +141,6 @@ class Table9(object):
     def Table9(self):
         # Take the correct time frame
         self._df_set_time_frame()
-        # Remove every invalid pff (0 and NaN)
-        self._df_remove_invalid_pfs()
         # Build Return data frame
         self._df_build_return_datasets()
         # Take factors
