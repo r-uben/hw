@@ -213,7 +213,7 @@ df["constant"]=[1]*len(df)
 df["dt"]=pd.to_datetime(df["dt"], format="%Y%m%d")
 df=df.set_index(["dt"]).sort_index()
 
-#ROW 8
+#ROW
 n=8
 cols=["ALLStrong30"]
 x=df[["Amktrf", "Asmb", "Ahml", "Armw", "Acma"]]

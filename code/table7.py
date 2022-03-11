@@ -84,7 +84,6 @@ class Table7(object):
     def _FF5(self):
         Y       = self._LL_portfolio()
         X       = self.df[self.ff5]
-        print(X)
         self._reg(Y, X, "FF5")
 
     def _HXZ(self):

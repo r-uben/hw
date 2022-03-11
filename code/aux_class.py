@@ -15,7 +15,6 @@ class AuxClass(object):
 
         self.zip_f  = {}
 
-
     def include_constant_columns(self, df):
         T = len(df)
         df["const"] = [1]*T
