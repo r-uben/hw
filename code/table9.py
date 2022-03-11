@@ -51,7 +51,7 @@ class Table9(object):
         # t_statistics
         self.t_stats = {}
         # aux
-        self.Eff = {}
+        self.allEff = {}
         # Lambda
         self.λ = {}
 
@@ -134,7 +134,7 @@ class Table9(object):
                 # frame containing the products FR
                 for f in F.columns.tolist():
                     # Multiply through each date
-                    FR[f] = F[f].mul(R[n])
+                    FR[f] = np.multiply(F[f], R[n])
                 FR = pd.DataFrame(FR)
                 FR = self.aux.include_constant_columns(FR)
                 x = FR["const"]
@@ -148,7 +148,7 @@ class Table9(object):
             regFR = pd.DataFrame(regFR)
             regFR.index = ["mktrf", "smb", "hml", "LL"]
             # Include the resuls, as A MATRIX, to the dictionary with all the different situation (30, 38, 48)
-            regFR = self.aux.replace_nan_by_row(regFR)
+            regFR = regFR.fillna(0) #= self.aux.replace_nan_by_row(regFR)
             self.allFR[num] = regFR.values
         
     def _compute_b(self):
@@ -223,33 +223,42 @@ class Table9(object):
         print(self.t_stats)
 
     def _compute_Eff(self):
-        self.ff = {}
+        self.allEff = {}
         for num in self.num_firms:
             F  = self.F[num]
-            ff = []
-            for t in F.index.tolist():
-                Ft = F.loc[t,:].values
-                print(np.inner(Ft,Ft))
-                ff.append( np.inner(Ft,Ft) )
-            self.ff[num] = ff
-        self.ff = pd.DataFrame(self.ff)
-        self.ff = self.aux.include_constant_columns(self.ff)
-        x = self.ff["const"] 
-        for num in self.num_firms:
-            y = self.ff[num]
-            reg = sm.OLS(y.astype(float), x.astype(float)).fit(cov_type='HAC', cov_kwds={'maxlags':self.lags})                    
-            self.Eff[num] = float(reg.params)
-        print(self.Eff)
+            ff = {}
+            for fcol in F.columns.tolist():
+                ff[fcol] = []
+                for frow in F.columns.tolist(): 
+                    ff[fcol].append((np.cov(F[frow], F[fcol])[0][1] + np.mean(F[frow])*np.mean(F[fcol])))
+                    # ff[frow] = np.multiply(F[fcol],F[frow])
+            self.allEff[num] = pd.DataFrame(ff)
+                # ff = self.aux.include_constant_columns(ff)
+                # x  = ff["const"] 
+                # rowff = []
+                # for f in  F.columns.tolist():
+                #     y = ff[f]
+                #     reg = sm.OLS(y.astype(float), x.astype(float)).fit(cov_type='HAC', cov_kwds={'maxlags':self.lags})  
+                #     rowff.append(float(reg.params))                 
+            #     regFF[fcol] = rowff
+            # regFF = pd.DataFrame(regFF)
+            # regFF.index = self.factors  
+            # self.allEff[num] = np.transpose(regFF.values)
 
     def _compute_λ(self):
         self._compute_Eff()
         for num in self.num_firms:
-            self.λ[num] = self.b[num].values * self.Eff[num]
+            print(self.b[num].values)
+            self.λ[num] = self.allEff[num] @ np.transpose(self.b[num].values)
         self.λ = pd.DataFrame(self.λ)
         self.λ.index = self.factors
         print()
         print()
+        print("#################### λ ####################")
+        print()
         print(self.λ)
+        print()
+        print()
 
     
     def Table9(self):
@@ -263,4 +272,5 @@ class Table9(object):
         self._compute_S()
         self._compute_SE_b()
         self._compute_t_stats()
+        #self._compute_Eff()
         self._compute_λ()
