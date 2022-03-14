@@ -294,7 +294,7 @@ class Table9(object):
         self.λ = pd.DataFrame(self.λ)
         self.λ.index = self.factors
         print()
-        print("#################### λ (2ND STAGE) ####################")
+        print("################# λ (2ND STAGE) #################")
         print()
         print(self.λ)
         print()
