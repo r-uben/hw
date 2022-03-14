@@ -1,4 +1,6 @@
 from numpy.linalg import inv
+
+import math
 import numpy as np
 import pandas as pd
 import statsmodels.api as sm
@@ -19,8 +21,8 @@ class Table9(object):
         # Read (monthly) factor file and put it fancy
         self.F = {}
         self.f = pd.read_csv(monthly_factors, sep=";", names=["dt", "mktrf", "smb", "hml", "rf"], dtype=str)
+        self.rf = self.aux.set_date_as_index(self.f[["dt", "rf"]]) 
         self.f = self.aux.set_date_as_index(self.f[["dt", "mktrf", "smb", "hml"]])
-
         # Read (monthly) LL factor files
         self.LL = {}
 
@@ -39,11 +41,13 @@ class Table9(object):
         self.last_year = 2012
 
         # Returns
-        self.R = {}
+        self.Re = {}
+        self.ERe = {}
         # FR
         self.allFR = {}
         # b
         self.b = {}
+        self.b2 = {}
         # eps
         self.S = {}
         # SE_bhat
@@ -52,26 +56,27 @@ class Table9(object):
         self.t_stats = {}
         # aux
         self.allEff = {}
-        # Lambda
+        # Lambd
         self.λ = {}
 
     def _read_files(self):
         if 30 in self.num_firms:
             LL30               = pd.read_excel(self.master_file, sheet_name="T1_ptfs", names=["dt", "LeadR", "MidR", "LagR", "Lead", "Mid", "Lag", "LL", "LLStrong", "mktrf", "smb", "hml"], dtype=str)
             LL30               = self.aux.set_date_as_index(LL30)
-            LL30.loc[:,"LL"]   = (pd.to_numeric(LL30["LL"], errors='coerce')*100).tolist()
-            self.LL[30]        = LL30[["LL"]]
+            LL30.loc[:,"LL"]   = (pd.to_numeric(LL30.loc[:,"LL"], errors='coerce')*100).tolist() 
+            self.LL[30]        = LL30[["LL"]] 
         if 38 or 49 in self.num_firms:
             LL38and49          = pd.read_excel(self.master_file, sheet_name="T3_ptfs", names=["dt", "LL38", "LLStrong", "LL49", "LLStrong49"], dtype=str)
             LL38and49          = self.aux.set_date_as_index(LL38and49)
             if 38 in self.num_firms:
                 LL38                = LL38and49[["LL38"]]
-                LL38.loc[:, "LL38"] = (pd.to_numeric(LL38["LL38"], errors='coerce')*100).tolist()
-                self.LL[38]         = LL38
+                LL38.loc[:, "LL38"] = (pd.to_numeric(LL38["LL38"], errors='coerce')*100).tolist() 
+                self.LL[38]         = LL38 
             if 49 in self.num_firms: 
                 LL49                = LL38and49[["LL49"]]
+
                 LL49.loc[:,"LL49"]  = (pd.to_numeric(LL49["LL49"], errors='coerce')*100).tolist()
-                self.LL[49]         = LL49
+                self.LL[49]         = LL49 
     
     def _construct_df(self):
         for num in self.num_firms:
@@ -83,37 +88,58 @@ class Table9(object):
 
     def _df_set_time_frame(self, df = None):
         if df is None: 
+            init_index = 0
+            end_index = 0
             for num in self.num_firms:
                 init_index  = self.dates[num].index(str(self.init_year) + "-01")
-                end_index   = self.dates[num].index(str(self.last_year) + "-12") 
+                # +1 to include the last date
+                end_index   = self.dates[num].index(str(self.last_year) + "-12")+1
                 self.df[num] = self.df[num][init_index:end_index]
         else:
             init_index  = df.index.tolist().index(str(self.init_year) + "-01")
-            end_index   = df.index.tolist().index(str(self.last_year) + "-12") 
+            # +1 to include the last date
+            end_index   = df.index.tolist().index(str(self.last_year) + "-12")+1
             df = df[init_index:end_index]
             return df
-
-    def _df_build_return_datasets(self):
-        for num in self.num_firms:
-            df = self.df[num]
-            T = df.index.tolist()
-            self.R[num] = {'dt' : T}   
-            for n in df.columns:
-                self.R[num][n] = []
-                for t in T:
-                    Rt = df[n][t] + 1 #/ df[n][t]
-                    self.R[num][n].append(Rt)
-            self.R[num]  = pd.DataFrame(self.R[num]).set_index('dt')
-            column_means = self.R[num].mean()
-            self.R[num]  = self.R[num].fillna(0) 
-            self.R[num]  = self.R[num].rename_axis(index=None, columns=None)
 
     def _df_build_factors_dataset(self):
         # Take the correct time frame
         self.f = self._df_set_time_frame(self.f)
+        self.rf = self._df_set_time_frame(self.rf)
         for num in self.num_firms:
             # Join the three FF factors with the LL factor
+            LL = self.LL[num].columns[0]
+            # excess
+            #åself.LL[num].loc[:,LL] =  [self.LL[num].loc[t, LL] - self.rf.loc[t,'rf'] for t in self.LL[num].index]
             self.F[num] = self.f.join(self.LL[num]) 
+
+    def _df_build_return_datasets(self):
+
+        self._df_build_factors_dataset()
+
+        for num in self.num_firms:
+            #self.ERe[num] = []
+            df = self.df[num]
+            T = df.index.tolist()
+            self.Re[num] = {'dt' : T}   
+            for n in df.columns:
+                self.Re[num][n] = []
+                for t in T:
+                    #Excess returns
+                    Rt = df.loc[t, n] - self.rf.loc[t,'rf']#/ df[n][t]
+                    self.Re[num][n].append(Rt)
+                #self.ERe[num].append(np.mean(self.Re[num][n]))
+            # Add LL
+            self.Re[num][n+1] = self.F[num][self.F[num].columns[-1]] #- self.rf.loc[:, 'rf'] 
+            #self.ERe[num].append(np.mean(self.Re[num][n+1]))
+            # Replace NaN in ERe
+            #self.ERe[num] = [0 if math.isnan(x) else x for x in self.ERe[num]]
+            #self.ERe[num] = np.array(self.ERe[num])  
+            self.Re[num]  = pd.DataFrame(self.Re[num]).set_index('dt')
+            column_means = self.Re[num].mean()
+            self.Re[num]  = self.Re[num].fillna(0) 
+            self.Re[num]  = self.Re[num].rename_axis(index=None, columns=None)
+
 
     def _E_d(self):
         self.allFR = {}
@@ -122,17 +148,20 @@ class Table9(object):
             # Rename the factor df
             F = self.F[num]
             # Rename the return df
-            R = self.R[num]
+            R = self.Re[num]
+            R = R.fillna(0)
+            self.ERe[num] = []
             # Create the dictionary for the products of F and R associated to the situation 
             # in which there are "num" firms
             regFR = {}
             # For a given number of firms, we loop among each one (we get temporal columns)
-            for n in R.columns.tolist():
+            for n in R.columns:
+                self.ERe[num].append(np.mean(self.Re[num][n]))
                 # For EACH firm, create the FR dictionary with the products of factors and returns
                 FR = {}
                 # Loop among each factor, which are going to be in the header of a new data
                 # frame containing the products FR
-                for f in F.columns.tolist():
+                for f in F.columns:
                     # Multiply through each date
                     FR[f] = np.multiply(F[f], R[n])
                 FR = pd.DataFrame(FR)
@@ -148,19 +177,19 @@ class Table9(object):
             regFR = pd.DataFrame(regFR)
             regFR.index = ["mktrf", "smb", "hml", "LL"]
             # Include the resuls, as A MATRIX, to the dictionary with all the different situation (30, 38, 48)
-            regFR = regFR.fillna(0) #= self.aux.replace_nan_by_row(regFR)
+            #  #= self.aux.replace_nan_by_row(regFR)
+            self.ERe[num]  = np.array(self.ERe[num])
             self.allFR[num] = regFR.values
         
     def _compute_b(self):
         '''
             Here we must compute the loadings of the SDF. To so so, we use the fact that
-            b = inv(E[d]E[d]')E[d]-1, as seen in class.
+            b = inv(E[d]E[d]')E[d]E[Re], as seen in class.
         '''
         self._E_d() 
         for num in self.num_firms:
             E_d = self.allFR[num]
-            self.b[num] = inv(E_d @ np.transpose(E_d)) @ E_d @ np.ones((num, 1))
-            self.b[num] = [k[0] for k in self.b[num]]
+            self.b[num] = inv(E_d @ np.transpose(E_d)) @ E_d @ np.transpose(self.ERe[num])#np.ones((len(self.Re[num].columns), 1))
         self.b = pd.DataFrame(self.b)
         self.b.index = ["mktrf", "smb", "hml", "LL"]
         print()
@@ -168,6 +197,17 @@ class Table9(object):
         print("############# TABLE 9 #############")
         print()
         print(self.b)
+        self._compute_S()
+        for num in self.num_firms:
+            E_d = self.allFR[num]
+            self.b2[num] = inv(E_d @ inv(self.S[num]) @ np.transpose(E_d)) @ E_d @ inv(self.S[num]) @ np.transpose(self.ERe[num])#np.ones((len(self.Re[num].columns), 1))
+        self.b2 = pd.DataFrame(self.b2)
+        self.b2.index = ["mktrf", "smb", "hml", "LL"]
+        print()
+        print()
+        print("############# SECOND STAGE #############")
+        print()
+        print(self.b2)
 
     def _compute_S(self):
         '''
@@ -181,13 +221,13 @@ class Table9(object):
         '''
         for num in self.num_firms:
             F     = self.F[num]
-            R     = self.R[num]
+            R     = self.Re[num]
             bhat  = self.b[num].values
             ε_num = {}
             for t in F.index.tolist():
                 ε_num_t = []
                 for n in R.columns.tolist():
-                    ε_num_t.append(np.inner(bhat, F.loc[t].values) * R.loc[t,n] - 1)
+                    ε_num_t.append(np.inner(bhat, F.loc[t].values) * R.loc[t,n])
                 ε_num[t] = ε_num_t
             ε_num = pd.DataFrame(ε_num, columns=F.index.tolist())
             self.S[num] = np.cov(ε_num, dtype=float)
@@ -196,8 +236,9 @@ class Table9(object):
         for num in self.num_firms:
             T = len(self.F[num])
             Dg = self.allFR[num]
-            VE_b = 1/T *  inv(Dg @ inv(self.S[num]) @ np.transpose(Dg)) 
-            self.SE_b[num] = [np.sqrt(a) for a in VE_b.diagonal()]
+            VE_b = 1/(T-1) *  inv(Dg  @ np.transpose(Dg)) 
+            # Add inv(self.S[num]) in the second step
+            self.SE_b[num] = [np.sqrt(a)*10 for a in VE_b.diagonal()]
         self.SE_b = pd.DataFrame(self.SE_b)
         self.SE_b.index = self.factors 
         print()
@@ -233,28 +274,27 @@ class Table9(object):
                     ff[fcol].append((np.cov(F[frow], F[fcol])[0][1] + np.mean(F[frow])*np.mean(F[fcol])))
                     # ff[frow] = np.multiply(F[fcol],F[frow])
             self.allEff[num] = pd.DataFrame(ff)
-                # ff = self.aux.include_constant_columns(ff)
-                # x  = ff["const"] 
-                # rowff = []
-                # for f in  F.columns.tolist():
-                #     y = ff[f]
-                #     reg = sm.OLS(y.astype(float), x.astype(float)).fit(cov_type='HAC', cov_kwds={'maxlags':self.lags})  
-                #     rowff.append(float(reg.params))                 
-            #     regFF[fcol] = rowff
-            # regFF = pd.DataFrame(regFF)
-            # regFF.index = self.factors  
-            # self.allEff[num] = np.transpose(regFF.values)
+  
 
     def _compute_λ(self):
         self._compute_Eff()
         for num in self.num_firms:
-            print(self.b[num].values)
             self.λ[num] = self.allEff[num] @ np.transpose(self.b[num].values)
         self.λ = pd.DataFrame(self.λ)
         self.λ.index = self.factors
         print()
         print()
         print("#################### λ ####################")
+        print()
+        print(self.λ)
+        print()
+        print()
+        for num in self.num_firms:
+            self.λ[num] = self.allEff[num].values @ np.transpose(self.b2[num].values)
+        self.λ = pd.DataFrame(self.λ)
+        self.λ.index = self.factors
+        print()
+        print("#################### λ (2ND STAGE) ####################")
         print()
         print(self.λ)
         print()
@@ -266,7 +306,6 @@ class Table9(object):
         self._construct_df()
         self._df_set_time_frame()
         self._df_build_return_datasets()
-        self._df_build_factors_dataset()
         # Calculate the "E[d] = E[FR]"
         self._compute_b()
         self._compute_S()

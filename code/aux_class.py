@@ -23,7 +23,7 @@ class AuxClass(object):
         df = df[cols]
         return df
 
-    def set_date_as_index(self, df):
+    def set_date_as_index(self, df, cols = True):
         if "dt" in df.columns.tolist():
             df.loc[:, "dt"] = df["dt"].str.slice(0,6).tolist()
             df = df.set_index("dt")
