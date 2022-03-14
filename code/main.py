@@ -28,6 +28,6 @@ if __name__=="__main__":
     T7.Table7()
 
     ### TABLE 9 ###
-    num_firms = [30, 38, 49]
+    num_firms = [30, 38, 49, '25_book_size_all']
     T9          = Table9(master_file, monthly_factors, num_firms)
     T9.Table9()

@@ -24,13 +24,14 @@ class AuxClass(object):
         return df
 
     def set_date_as_index(self, df, cols = True):
-        if "dt" in df.columns.tolist():
-            df.loc[:, "dt"] = df["dt"].str.slice(0,6).tolist()
-            df = df.set_index("dt")
-            df = df.rename_axis(index=None, columns=None)
-            df.index = pd.to_datetime(df.index, format="%Y%m").strftime("%Y-%m")
-            df = df.astype(float)
-            return df
+        if "dt" in df.columns:
+            df_new = df.copy()
+            df_new = df_new.assign(dt = [x[:6] for x in df.dt])
+            df_new = df_new.set_index("dt")
+            df_new = df_new.rename_axis(index=None, columns=None)
+            df_new.index = pd.to_datetime(df_new.index, format="%Y%m").strftime("%Y-%m")
+            df_new = df_new.astype(float)
+            return df_new
         else:
             return 'Please, add a temporal column'
 
@@ -61,12 +62,12 @@ class AuxClass(object):
         file    = Path(self._tex_file(table, title))
         file.write_text(f"{text}\n\n")
 
-    def replace_nan_by_row(self,df):
+    def replace_nan_by_column(self,df):
         # Thanks to Andy Hayden: https://stackoverflow.com/questions/33058590/pandas-dataframe-replacing-nan-with-row-average
-        m = df.mean(axis=1)
-        for i, col in enumerate(df):
+        m = df.mean(axis=0)
+        for col in df.columns:
             # using i allows for duplicate columns
             # inplace *may* not always work here, so IMO the next line is preferred
             # df.iloc[:, i].fillna(m, inplace=True)
-            df.iloc[:, i] = df.iloc[:, i].fillna(m)
+            df[col] = df[col].fillna(m)
         return df
