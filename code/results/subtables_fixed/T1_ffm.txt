@@ -1,0 +1,15 @@
+\begin{table}[h!]
+\caption{}
+\label{}
+\begin{center}
+\begin{tabular}{llllll}
+\hline
+               & Lead    & Mid    & Lag    & LL     & LLStrong  \\
+\hline
+const          & 3.02*** & -0.71  & -1.66  & 4.68** & 6.23**    \\
+               & (1.15)  & (0.54) & (1.43) & (2.07) & (2.48)    \\
+\hline
+\end{tabular}
+\end{center}
+\end{table}
+

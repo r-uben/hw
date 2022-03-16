@@ -1,0 +1,15 @@
+\begin{table}[h!]
+\caption{}
+\label{}
+\begin{center}
+\begin{tabular}{lllll}
+\hline
+               & LL38   & LLStrong38 & LL49   & LLStrong49  \\
+\hline
+const          & 3.84** & 6.94**     & 5.10** & 5.99**      \\
+               & (1.64) & (2.96)     & (2.20) & (2.68)      \\
+\hline
+\end{tabular}
+\end{center}
+\end{table}
+

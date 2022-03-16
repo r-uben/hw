@@ -1,0 +1,52 @@
+\documentclass[10pt]{article}
+
+
+\usepackage{phd}
+\usepackage{booktabs}
+\usepackage{eurosym}
+\usepackage{hyperref}
+%\renewcommand{\euro}{\text{\euro}}
+
+
+\author{Rubén Fernández Fuertes}
+\title{Homework}
+
+
+% This course introduces us to long-run-risk
+
+
+\begin{document}
+	
+	\maketitle
+	
+	The results have been created with four different classes of functions, one for each Table. They can be found in the main folder together with the \texttt{main.py} file. Note that I have used a couple of libraries whose installation may be needed. Everything is specificated both in the \texttt{main.py} and in the \href{https://github.com/r-uben/hw}{GitHub} repository. However, simple errors would appear in the console if there's a library missing, so it should not be difficult to notice that.
+	
+	Further, in order to preserve the fancy style of this document, I have created two subfolders with the \texttt{.txt} created for each table: one of them will be updated each time the code runs. The other one is fixed (\texttt{subtables\_fixed}).
+.	
+	\section{Table 1}
+		\input{subtables_fixed/T1_average_return.txt}
+		\input{subtables_fixed/T1_capm.txt}
+		\input{subtables_fixed/T1_ffm.txt}
+	\newpage
+	\section{Table 3}
+		\input{subtables_fixed/T3_average_return.txt}
+		\input{subtables_fixed/T3_capm.txt}
+		\input{subtables_fixed/T3_ffm.txt}
+	\newpage
+	\section{Table 7}
+	\subsection{FF5}
+		\input{subtables_fixed/T7_FF5.txt}
+	\subsection{HXZ}
+		\input{subtables_fixed/T7_HXZ.txt}
+	\subsection{Carhart MOM}
+		\input{subtables_fixed/T7_MOM1_MOM.txt}
+		\input{subtables_fixed/T7_MOM2_MOM.txt}
+		\input{subtables_fixed/T7_MOM3_MOM.txt}
+	
+	\phantom{a}
+	\newpage
+	\section{Table 9}
+	\input{subtables_fixed/T9_b.txt}
+	\input{subtables_fixed/T9_lambda.txt}
+	
+\end{document}

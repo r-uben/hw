@@ -60,7 +60,7 @@ class AuxClass(object):
         
     def create_txt(self, table, title, text):
         file    = Path(self._tex_file(table, title))
-        file.write_text(f"{text}\n\n")
+        file.write_text(f"{text}\n\n",)
 
     def replace_nan_by_column(self,df):
         # Thanks to Andy Hayden: https://stackoverflow.com/questions/33058590/pandas-dataframe-replacing-nan-with-row-average

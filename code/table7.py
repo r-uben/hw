@@ -95,7 +95,7 @@ class Table7(object):
         Y            = self._LL_portfolio()
         missing_reg1 = ["mktrf2", "smb2", "hml2"]
         missing_reg2 = ["smb2", "hml2"]
-        missing_reg3 = ["hml2"]
+        missing_reg3 = []
         missing_regs = [missing_reg1, missing_reg2, missing_reg3]
         X = []
         for missing_reg in missing_regs:

@@ -1,4 +1,4 @@
-\begin{table}
+\begin{table}[h!]
 \caption{}
 \label{}
 \begin{center}
@@ -16,8 +16,6 @@ smb2           & -0.14*      \\
                & (0.08)      \\
 hml2           & 0.05        \\
                & (0.14)      \\
-R-squared      & 0.05        \\
-R-squared Adj. & 0.05        \\
 \hline
 \end{tabular}
 \end{center}

@@ -1,6 +1,8 @@
 import math
+from tkinter import N
 import numpy as np
 import pandas as pd
+import scipy
 import statsmodels.api as sm
 
 from numpy.linalg import inv
@@ -32,33 +34,44 @@ class Table9(object):
 
         # Factors
         self.factors = ["mktrf", "smb", "hml", "LL"]
+        self.K = len(self.factors)
         # Constructing every data set
         self.df = {}
         self.dates = {}
     
         # Estimations are done from 1972 to 2012
-        self.init_year = 1972
-        self.last_year = 2012
+        self.init_year      = 1972
+        self.last_year      = 2012
 
         # Returns
-        self.Re = {}
-        self.ERe = {}
+        self.Re             = {}
+        self.ERe            = {}
         # FR
-        self.allFR = {}
+        self.allFR          = {}
         # b
-        self.b = {}
-        self.b2 = {}
+        self.b1             = {}
+        self.b2             = {}
         # eps
-        self.S = {}
+        self.S              = {}
         # SE_bhat
-        self.SE_b = {}
+        self.VE_b1          = {}
+        self.VE_b2          = {}
+        self.SE_b1          = {}
+        self.SE_b2          = {}
+        self.SE_b1_array    = {}
+        self.SE_b2_array    = {}
         # t_statistics
-        self.t_stats = {}
+        self.t_stats        = {}
+        self.p_vals         = {}
         # aux
-        self.allEff = {}
+        self.allEff         = {}
         # Lambd
-        self.λ = {}
-        self.λ2 = {}
+        self.λ1             = {}
+        self.λ2             = {}
+        self.VE_λ1          = {}
+        self.VE_λ2          = {}
+        self.SE_λ1          = {}
+        self.SE_λ2          = {}
 
     def _read_files(self):
 
@@ -68,17 +81,19 @@ class Table9(object):
             LL              = self.aux.set_date_as_index(LL)
             LL.loc[:,"LL"]  = LL.loc[:,"LL"]*100
             self.LL[num]    = LL[["LL"]] 
-            # if num == 38 or num == 49:
-            #     LL38and49          = pd.read_excel(self.master_file, sheet_name="T3_ptfs", names=["dt", "LL38", "LLStrong38", "LL49", "LLStrong49"], dtype=str)
-            #     LL38and49          = self.aux.set_date_as_index(LL38and49)
-            #     if num == 38:
-            #         LL38                = LL38and49[["LL38"]]
-            #         LL38.loc[:, "LL38"] = (pd.to_numeric(LL38["LL38"], errors='coerce')*100).tolist() 
-            #         self.LL[38]         = LL38 
-            #     if num == 49: 
-            #         LL49                = LL38and49[["LL49"]]
-            #         LL49.loc[:,"LL49"]  = (pd.to_numeric(LL49["LL49"], errors='coerce')*100).tolist()
-            #         self.LL[49]         = LL49 
+
+    def _set_table(self, df):
+        df = pd.DataFrame(df)
+        df.index = self.factors
+        return df
+
+    def _print_table(self, title, table):
+        print()
+        print()
+        print("############# " + title + " #############")
+        print()
+        print(table)
+        print()
 
     def _construct_df(self):
         for num in self.num_firms:
@@ -198,10 +213,17 @@ class Table9(object):
             self.ERe[num]  = np.array(self.ERe[num])
             self.allFR[num] = regFR.values
 
+    def _var(self, v):
+        Vv = 0
+        Ev = np.mean(v)
+        for el in v:
+            Vv += (el - Ev)**2
+        return Vv / (len(v)-1)
+
     def _compute_S(self):
         '''
             Here we must compute the errors in the GMM model. They are given by the formula
-            ε_t^i = b F_t R_t^i - 1. Note that here b and F are vectors in R^K and R_t^i is a number.
+            ε_t^i = b F_t R_t^i. Note that here b and F are vectors in R^K and R_t^i is a number.
             If we take the complete column, we have (1xK) x (KxT) x (Tx1) = (1xK) x (Kx1)= 1x1. 
             So that's what we are gonna do, we are gonna take the matrix FR that has been kept in self.allFR, 
             and multiply each column by the estimated parameter b. Then, substract one to it.  
@@ -211,55 +233,164 @@ class Table9(object):
         for num in self.num_firms:
             F     = self.F[num]
             R     = self.Re[num]
-            bhat  = self.b[num].values
+            bhat  = self.b1[num].values
             ε_num = {}
-            for t in F.index.tolist():
-                ε_num_t = []
-                for n in R.columns.tolist():
-                    ε_num_t.append(np.inner(bhat, F.loc[t].values) * R.loc[t,n])
-                ε_num[t] = ε_num_t
-            ε_num = pd.DataFrame(ε_num, columns=F.index.tolist())
-            self.S[num] = np.cov(ε_num, dtype=float)
+            for t in F.index:
+                ε_num_n = []
+                bF = np.inner(bhat, F.loc[t, :].values)
+                for n in R.columns:
+                    ε_num_n.append(bF * R.loc[t,n])
+                ε_num[t] = ε_num_n
+            ε_num = pd.DataFrame(ε_num)
+            self.S[num] = np.cov(ε_num, dtype=float) 
 
     def _compute_SE_b(self, step = '1st step'):
         self._compute_S()
-        for num in self.num_firms:
-            T = len(self.F[num])
-            Dg = self.allFR[num]
-            if step == '1st step':
-                VE_b = 1/T * inv(Dg  @ np.transpose(Dg)) @ (Dg @ self.S[num] @ np.transpose(Dg)) @ inv(Dg  @ np.transpose(Dg)) 
-            if step == '2nd step':
-                VE_b = 1/T * inv(Dg @ inv(self.S[num]) @ np.transpose(Dg)) 
-            # Add inv(self.S[num]) in the second step
-            self.SE_b[num] = [np.sqrt(a) for a in VE_b.diagonal()]
-        self.SE_b = pd.DataFrame(self.SE_b)
-        self.SE_b.index = self.factors 
-        print()
-        print()
-        print("########### STANDARD ERRORS ##########")
-        print()
-        print(self.SE_b)
-
-    def _compute_t_stats(self, step = '1st step'):
         if step == '1st step':
-            b = self.b
+            for num in self.num_firms:
+                N = len(self.Re[num].columns)
+                Dg = self.allFR[num]
+                self.VE_b1[num] = 1/N * inv(Dg  @ np.transpose(Dg)) @ (Dg @ self.S[num] @ np.transpose(Dg)) @ inv(Dg  @ np.transpose(Dg)) 
+                # Add inv(self.S[num]) in the second step
+                self.SE_b1[num] = [np.sqrt(a) for a in self.VE_b1[num].diagonal()]
+                self.SE_b1_array[num] = self.SE_b1[num]
+            self.SE_b1 = self._set_table(self.SE_b1)
+            # self._print_table('TABLE 9 (1st stage): SE(b)', self.SE_b1)
         if step == '2nd step':
-            b = self.b2
+            for num in self.num_firms:
+                N = len(self.Re[num].columns)
+                Dg = self.allFR[num]
+                self.VE_b2[num] = 1/N * inv(Dg @ inv(self.S[num]) @ np.transpose(Dg)) 
+                # Add inv(self.S[num]) in the second step
+                self.SE_b2[num] = [np.sqrt(a) for a in self.VE_b2[num].diagonal()]
+                self.SE_b2_array[num] = self.SE_b2[num]
+            self.SE_b2 = self._set_table(self.SE_b2)
+            # self._print_table('TABLE 9 (2nd stage): SE(b)', self.SE_b2)
 
+    def _compute_SE_λ(self, step = '1st step'):
+        if step == '1st step':
+            self._compute_SE_b('1st step')
+            for num in self.num_firms:
+                self.VE_λ1[num] = self.allEff[num].values @ self.VE_b1[num] @ self.allEff[num].values
+                self.SE_λ1[num] = [np.sqrt(a) for a in self.VE_λ1[num].diagonal()]
+            self.SE_λ1 = self._set_table(self.SE_λ1)
+            # self._print_table('TABLE 9 (1st stage): SE(λ)', self.SE_λ1)
+        if step == '2nd step':
+            self._compute_SE_b('2st step')
+            for num in self.num_firms:
+                self.VE_λ2[num] = self.allEff[num].values @ self.VE_b2[num] @ self.allEff[num].values
+                self.SE_λ2[num] = [np.sqrt(a) for a in self.VE_λ2[num].diagonal()]
+            self.SE_λ2 = self._set_table(self.SE_λ2)
+            #self._print_table('TABLE 9 (2nd stage): SE(λ)', self.SE_λ2)
+
+    def _compute_t_stats(self, step = '1st step', loading = 'b'):
+        if step == '1st step' and loading == 'b':
+            df = self.b1
+            SE = self.SE_b1
+        if step == '2nd step' and loading == 'b':
+            df = self.b2
+            SE = self.SE_b2
+        if step == '1st step' and loading == 'λ':
+            df = self.λ1
+            SE = self.SE_λ1
+        if step == '2nd step' and loading == 'λ':
+            df = self.λ2
+            SE = self.SE_λ2
+        t_stats = {}
+        se = 0
         for num in self.num_firms:
             t_stat = []
-            for f in b.index.tolist():
-                bhat = b.loc[f, num]
-                se   = self.SE_b.loc[f, num]
-                t_stat.append(abs(bhat/se))
-            self.t_stats[num] = t_stat
-        self.t_stats = pd.DataFrame(self.t_stats)
-        self.t_stats.index =  self.factors
-        print()
-        print()
-        print("############## T STATS ##############")
-        print()
-        print(self.t_stats)
+            for f in df.index:
+                hat = df.loc[f, num]
+                se  = SE.loc[f, num]
+                t_stat.append(abs(hat/se))
+            t_stats[num] = t_stat
+        t_stats = self._set_table(t_stats)
+        #self._print_table('TABLE 9 (' + step + '): t-stats for b', t_stats)
+        return t_stats
+       
+    def _compute_pval(self, step = '1step', loading = 'b'):
+        if step == '1st step' and loading == 'b':
+            t_stats = self._compute_t_stats('1st step', 'b')
+        if step == '2nd step' and loading == 'b':
+            t_stats = self._compute_t_stats('2nd step', 'b')
+        if step == '1st step' and loading == 'λ':
+            t_stats = self._compute_t_stats('1st step', 'λ')
+        if step == '2nd step' and loading == 'λ':
+            t_stats = self._compute_t_stats('2nd step', 'λ')
+        pvals_df = {}
+        for num in self.num_firms:
+            N = float(len(self.Re[num].columns))
+            pvals = []
+            for f in self.factors:
+                pvals.append(scipy.stats.t.sf(abs(t_stats.loc[f,num]), df = N + 1 - self.K))
+            pvals_df[num] = pvals
+        pvals_df = self._set_table(pvals_df)
+        #self._print_table('TABLE 9 (' + step + '): p values for ' + loading, pvals_df)
+        return pvals_df
+
+    def _counting_stars(self, step = '1st step', loading = 'b'):
+
+        if step == '1st step' and loading == 'b':
+            pvals = self._compute_pval('1st step', 'b')
+            df = self.b1.copy()
+        if step == '2nd step' and loading == 'b':
+            pvals = self._compute_pval('2nd step', 'b')
+            df = self.b2.copy()
+        if step == '1st step' and loading == 'λ':
+            pvals = self._compute_pval('1st step', 'λ')
+            df = self.λ1.copy()
+        if step == '2nd step' and loading == 'λ':
+            pvals = self._compute_pval('2nd step', 'λ')
+            df = self.λ2.copy()
+        
+        α001 = 0.01
+        α005 = 0.05
+        α01  = 0.1
+        
+        for num in self.num_firms:
+            for f in self.factors:
+                if pvals.loc[f, num] >= 0.00 and pvals.loc[f, num] < α001:
+                    df.loc[f, num] = f"{round(df.loc[f, num], 4)}***"
+                if pvals.loc[f, num] >= α001 and pvals.loc[f, num] < α005:
+                    df.loc[f, num] = f"{round(df.loc[f, num], 4)}**"
+                if pvals.loc[f, num] >= α005 and pvals.loc[f, num] < α01:
+                    df.loc[f, num] = f"{round(df.loc[f, num], 4)}*"
+                if pvals.loc[f, num] >= α01 and pvals.loc[f, num] < 1.00:
+                    df.loc[f, num] = f"{round(df.loc[f, num], 4)}"
+        return df
+
+    def _complete_table(self, step = '1st step', loading = 'b'):
+        if step == '1st step' and loading == 'b':
+            df = self._counting_stars(step,loading)
+            se = self.SE_b1.copy()
+        if step == '2nd step' and loading == 'b':
+            df = self._counting_stars(step,loading)
+            se = self.SE_b2.copy()
+        if step == '1st step' and loading == 'λ':
+            df = self._counting_stars(step,loading)
+            se = self.SE_λ1.copy()
+        if step == '2nd step' and loading == 'λ':
+            df = self._counting_stars(step, loading)
+            se = self.SE_λ2.copy()
+
+        new_index = ['mktrf', '', 'smb', '', 'hml', '', 'LL', '']
+        long_fact = ['mktrf', 'mktrf', 'smb', 'smb', 'hml', 'hml', 'LL', 'LL']
+        df_new = pd.DataFrame(columns = df.columns.tolist(), index = new_index)
+        count = 0
+
+        for f in long_fact:
+            if count % 2 == 0:
+                df_new.loc[new_index[count]] = df.loc[f]
+            else: 
+                new_se = [f"({round(a, 4)})" for a in se.loc[f]]
+                df_new.loc[new_index[count]] = new_se
+            count += 1
+        self._print_table("TABLE 9 (" + step + "): " + loading, df_new)
+        text = df_new.to_latex()
+        if loading == 'λ':
+            loading = 'lambda'
+        self.aux.create_txt("T9", loading, text)
 
     def _compute_Eff(self):
         self.allEff = {}
@@ -277,17 +408,9 @@ class Table9(object):
         for num in self.num_firms:
             E_d = self.allFR[num]
             if step == '1st step':
-                self.b[num] = inv(E_d @ np.transpose(E_d)) @ E_d @ np.transpose(self.ERe[num])
+                self.b1[num] = inv(E_d @ np.transpose(E_d)) @ E_d @ np.transpose(self.ERe[num])
             if step == '2nd step':
-                self.b2[num] = inv(E_d @ inv(self.S[num]) @ np.transpose(E_d)) @ E_d @ inv(self.S[num]) @ np.transpose(self.ERe[num])   #np.ones((len(self.Re[num].columns), 1))
-
-    def _print_table(self, title, table):
-        print()
-        print()
-        print("############# " + title + " #############")
-        print()
-        print(table)
-        print()
+                self.b2[num] = inv(E_d @ inv(self.S[num]) @ np.transpose(E_d)) @ E_d @ inv(self.S[num]) @ np.transpose(self.ERe[num])   
 
     def _compute_b(self):
         '''
@@ -298,35 +421,30 @@ class Table9(object):
         self._E_d() 
         ### FIRST STAGE 
         self._gmm_b_estimate()
-        self.b = pd.DataFrame(self.b)
-        self.b.index = ["mktrf", "smb", "hml", "LL"]
-        self._print_table('TABLE 9 (1st stage): b', self.b)
+        self.b1 = self._set_table(self.b1)
         self._compute_SE_b('1st step')
-        self._compute_t_stats('1st step')
+        self._complete_table('1st step', 'b') 
         ### SECOND STAGE
         self._gmm_b_estimate('2nd step')
-        self.b2 = pd.DataFrame(self.b2)
-        self.b2.index = ["mktrf", "smb", "hml", "LL"]
-        self._print_table('TABLE 9 (2nd stage): b', self.b2)
+        self.b2 = self._set_table(self.b2)
         self._compute_SE_b('2nd step')
-        self._compute_t_stats('2nd step')
+        self._complete_table('2nd step', 'b') 
     
     def _compute_λ(self):
         self._compute_Eff()
         ### FIRST STAFE
         for num in self.num_firms:
-            self.λ[num] = self.allEff[num] @ np.transpose(self.b[num].values)
-        self.λ = pd.DataFrame(self.λ)
-        self.λ.index = self.factors
-        self._print_table('TABLE 9 (1st stage): λ', self.λ)
+            self.λ1[num] = self.allEff[num] @ np.transpose(self.b1[num].values)
+        self.λ1 = self._set_table(self.λ1)
+        self._compute_SE_λ('1st step')
+        self._complete_table('1st step', 'λ') 
         ### SECOND STAGE
         for num in self.num_firms:
             self.λ2[num] = self.allEff[num].values @ np.transpose(self.b2[num].values)
-        self.λ2 = pd.DataFrame(self.λ)
-        self.λ2.index = self.factors
-        self._print_table('TABLE 9 (2nd stage): λ', self.λ2)
-  
-    def Table9(self):
+        self.λ2 = self._set_table(self.λ2)
+        self._compute_SE_λ('2nd step')
+        self._complete_table('2nd step', 'λ') 
 
+    def Table9(self):
         self._compute_b()
         self._compute_λ()

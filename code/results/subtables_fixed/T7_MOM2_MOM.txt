@@ -1,0 +1,19 @@
+\begin{table}[h!]
+\caption{}
+\label{}
+\begin{center}
+\begin{tabular}{ll}
+\hline
+               & LLStrong30  \\
+\hline
+const          & 5.17**      \\
+               & (2.06)      \\
+mom            & 0.10        \\
+               & (0.08)      \\
+mktrf2         & -0.14**     \\
+               & (0.07)      \\
+\hline
+\end{tabular}
+\end{center}
+\end{table}
+
