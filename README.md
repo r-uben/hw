@@ -15,7 +15,7 @@ pip install statsmodels
 
 # 2. To obtain the results:
 <pre>
-Running the "main.py" file provies you with all the results needed
+Running the "main.py" file provides you with all the results needed
 </pre>
 
 # 3. To see the results:
