@@ -1,6 +1,7 @@
 # 1. To make the code working
 
 <pre>
+source venv/bin/activate
 pip install numpy 
 pip install scipy
 pip install pandas
