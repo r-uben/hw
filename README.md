@@ -2,11 +2,16 @@
 
 <pre>
 source venv/bin/activate
-pip install numpy 
+</pre>
+
+<pre>
+If not:
+pip install numpy
 pip install scipy
 pip install pandas
 pip install statsmodels
 </pre>
+
 
 # 2. To obtain the results:
 <pre>
