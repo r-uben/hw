@@ -4,8 +4,8 @@
 source venv/bin/activate
 </pre>
 
+If not, just write:
 <pre>
-If not:
 pip install numpy
 pip install scipy
 pip install pandas
